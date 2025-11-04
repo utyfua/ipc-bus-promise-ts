@@ -33,6 +33,21 @@ export class IpcBus<GlobalRequest = any, GlobalResponse = any> {
     transport.off('error', this.close);
   }
 
+  private transportSend(message: Message): void {
+    const cb = (error: Error | null | unknown) => {
+      if (error !== null)
+        this.options.onUnhandledError?.(error);
+    }
+    try {
+      const result = this.options.transport.send(message, cb);
+      if (result instanceof Promise) {
+        result.catch(cb);
+      }
+    } catch (error) {
+      cb(error);
+    }
+  }
+
   private async handleRequest(message: Message): Promise<void> {
     const responseMessage: Message = {
       namespace: this.options.namespace!,
@@ -41,11 +56,7 @@ export class IpcBus<GlobalRequest = any, GlobalResponse = any> {
       payload: await handlePromiseWithResultOrError(() => this.options.handler(message.payload))
     };
 
-    try {
-      this.options.transport.send(responseMessage);
-    } catch (error) {
-      this.options.onUnhandledError?.(error);
-    }
+    this.transportSend(responseMessage);
   }
 
   private handleResponse(message: Message): void {
@@ -66,7 +77,7 @@ export class IpcBus<GlobalRequest = any, GlobalResponse = any> {
   private waitForResponse(rpcMessageId: string, timeout?: TimeoutType) {
     return new Promise<ResultOrError>((resolve, reject) => {
       this.responseCallbacks[rpcMessageId] = resolve;
-  
+
       if (timeout) {
         setTimeout(() => {
           delete this.responseCallbacks[rpcMessageId];
@@ -88,7 +99,7 @@ export class IpcBus<GlobalRequest = any, GlobalResponse = any> {
       payload
     };
 
-    this.options.transport.send(requestMessage);
+    this.transportSend(requestMessage);
 
     const response = await this.waitForResponse(rpcMessageId, timeout);
     delete this.responseCallbacks[rpcMessageId];

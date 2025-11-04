@@ -1,6 +1,6 @@
 {
   "name": "ipc-bus-promise",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "IPC Bus Promise is a lightweight library for message-based inter-process communication with Promise support. It is designed to work across multiple environments, including React Native WebView and Node.js child processes.",
   "keywords": [
     "ipc",
@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist/*",
+    "prepack": "npm run build",
     "prebuild": "run-s clean",
     "build": "run-s build:tsc build:rollup",
     "build:tsc": "tsc --module commonjs",
@@ -60,5 +61,8 @@
     "ts-jest": "^28.0.7",
     "ts-node": "^10.4.0",
     "typescript": "^4.4.4"
+  },
+  "overrides": {
+    "tslib": "2.6.2"
   }
 }

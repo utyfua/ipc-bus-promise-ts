@@ -21,7 +21,9 @@ export interface MessageResponse extends MessageBase {
 export type Message = MessageRequest | MessageResponse
 
 export interface Transport<Message = any> {
-  send(message: Message): void
+  send:
+  | ((message: Message) => void | Promise<void | unknown>)
+  | ((message: Message, cb: (error: Error | null) => void) => void)
   on(eventName: 'message', handler: (message: Message) => void): void
   on(eventName: 'close' | 'spawn', handler: () => void): void
   on(eventName: 'error', handler: (error: Error) => void): void
